@@ -11,6 +11,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import Profile from './src/components/Profile/Profile';
 import Payment from './src/components/Payment/Payment';
+import Verification from './src/components/Payment/Verification';
 
 const Login = createStackNavigator();
 
@@ -22,6 +23,7 @@ export default class capstone extends Component {
           <Login.Screen name="Login" component={App} />
           <Login.Screen name="Profile" component={Profile} />
           <Login.Screen name="Payment" component={Payment} />
+          <Login.Screen name="Verification" component={Verification} />
         </Login.Navigator>
       </NavigationContainer>
     );

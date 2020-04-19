@@ -14,40 +14,48 @@ import {
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import Modal from 'react-native-modal';
 
-import AsyncStorage from '@react-native-community/async-storage';
-
 class Verification extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      isVisible: this.props.isVisible,
+    };
   }
 
   verified = () => {
-    this.setState({isVisible: false});
+    this.isVisible = false;
   };
 
-  render() {
-    const {isVisible} = this.props;
-    console.log(isVisible);
+  componentDidMount() {
+    console.log(this.state.isVisible);
+  }
 
-    return (
-      isVisible && (
-        <View style={styles.container}>
-          <Modal
-            animationIn="slideInDown"
-            style={styles.bottomModal}
-            isVisible={isVisible}
-            onBackdropPress={() => this.setState({isVisible: false})}>
-            <View
-              style={{
-                flex: 1,
-                flexDirection: 'column',
-              }}>
-              <Text>Model Content</Text>
-              <Button title="Something" onPress={this.verified} />
-            </View>
-          </Modal>
-        </View>
-      )
+  render() {
+    return this.state.isVisible ? (
+      <View style={styles.container}>
+        <Modal
+          animationIn="slideInDown"
+          style={styles.bottomModal}
+          isVisible={this.state.isVisible}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'column',
+            }}>
+            <Text>Model Content</Text>
+            <Button
+              title="Something"
+              onPress={() => {
+                this.setState({isVisible: false});
+              }}
+            />
+          </View>
+        </Modal>
+      </View>
+    ) : (
+      <View>
+        <Text>There was an error !</Text>
+      </View>
     );
   }
 }

@@ -32,7 +32,6 @@ class Profile extends Component {
     try {
       const data = await AsyncStorage.getItem('studentData');
       this.setState({studentData: JSON.parse(data)});
-      console.log(this.state.studentData);
     } catch (err) {
       console.log('Error retrieving data' + err);
     }

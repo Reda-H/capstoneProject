@@ -6,7 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
+import NfcManager, {NfcTech, NfcEvents} from 'react-native-nfc-manager';
+import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-community/async-storage';
 import Verification from './Verification';
 
@@ -14,7 +17,7 @@ class Payment extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      launchVerification: false,
+      visibleModal: false,
       studentData: {
         studentID: '',
         firstName: '',
@@ -32,11 +35,21 @@ class Payment extends Component {
       },
     };
     this.history = this.history.bind(this);
-    this.toggleVerification = this.toggleVerification.bind(this);
   }
 
   componentDidMount() {
     this._loadInitialState().done();
+    NfcManager.start();
+    NfcManager.setEventListener(NfcEvents.DiscoverTag, tag => {
+      console.warn('tag', tag);
+      NfcManager.setAlertMessageIOS('I got your tag!');
+      NfcManager.unregisterTagEvent().catch(() => 0);
+    });
+  }
+
+  componentWillUnmount() {
+    NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+    NfcManager.unregisterTagEvent().catch(() => 0);
   }
 
   _loadInitialState = async () => {
@@ -44,7 +57,6 @@ class Payment extends Component {
     try {
       const data = await AsyncStorage.getItem('studentData');
       this.setState({studentData: JSON.parse(data)});
-      console.log(this.state.studentData);
     } catch (err) {
       console.log('Error retrieving data' + err);
     }
@@ -52,27 +64,40 @@ class Payment extends Component {
 
   render() {
     return (
-      <View>
+      <View styles={styles.container}>
+        {this.renderButton('Bottom half modal', () =>
+          this.setState({visibleModal: true}),
+        )}
         <Text>Your Balance:</Text>
         <Text>{this.state.studentData.balance}</Text>
-        <TouchableOpacity
-          onPress={() => {
-            this.toggleVerification();
-            // AsyncStorage.setItem(
-            //   'studentData',
-            //   JSON.stringify(this.state.studentData),
-            // );
-            // this.history();
-          }}>
-          <Text>Payment</Text>
+        <TouchableOpacity onPress={this._test}>
+          <Text>TEST HERE BOIIIIIIIIIIIIIIIIIIIIIIIIIIII</Text>
         </TouchableOpacity>
-        <Verification isVisible={this.state.launchVerification} />
+        <Modal isVisible={this.state.visibleModal} style={styles.bottomModal}>
+          {this.renderModalContent()}
+        </Modal>
       </View>
     );
   }
 
+  _cancel = () => {
+    NfcManager.unregisterTagEvent().catch(() => 0);
+  };
+
+  _test = async () => {
+    try {
+      console.log('here');
+      await NfcManager.registerTagEvent();
+      console.log('done');
+    } catch (ex) {
+      console.warn('ex', ex);
+      NfcManager.unregisterTagEvent().catch(() => 0);
+    }
+  };
+
   toggleVerification = () => {
     this.setState({launchVerification: true});
+    console.log(this.state.launchVerification);
   };
 
   history = async () => {
@@ -115,6 +140,52 @@ class Payment extends Component {
       .then(() => {})
       .done();
   };
+
+  renderModalContent = () => (
+    <View style={styles.modalContent}>
+      <Text>Are you sure you want to conduct this transaction !</Text>
+      {this.renderButton('Close', () => {
+        this.setState({visibleModal: null});
+      })}
+    </View>
+  );
+
+  renderButton = (text, onPress) => (
+    <TouchableOpacity onPress={onPress}>
+      <View style={styles.button}>
+        <Text>{text}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: 'lightblue',
+    padding: 12,
+    margin: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  bottomModal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+});
 
 module.exports = Payment;
